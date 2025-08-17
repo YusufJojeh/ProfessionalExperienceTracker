@@ -53,6 +53,16 @@ $content = [
 ];
 $current_content = $content[$lang];
 
+// Handle success messages
+$success_message = null;
+if (isset($_GET['success'])) {
+    switch ($_GET['success']) {
+        case 'project_updated':
+            $success_message = $lang === 'en' ? 'Project updated successfully!' : 'تم تحديث المشروع بنجاح!';
+            break;
+    }
+}
+
 $user_id = $_SESSION['user_id'];
 $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
 $stmt->bind_param("i", $user_id);
@@ -100,32 +110,57 @@ if ($row = $project_views_query->fetch_assoc()) {
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <style>
         :root {
-            --primary: #fff;
-            --primary-dark: #e2e8f0;
-            --secondary: #f59e0b;
-            --accent: #10b981;
-            --dark: #fff;
-            --light: #181818;
-            --white: #000;
-            --gray-100: #222;
-            --gray-200: #333;
-            --gray-300: #444;
-            --gray-400: #bdbdbd;
-            --gray-500: #bdbdbd;
-            --gray-600: #bdbdbd;
-            --gray-700: #fff;
-            --gray-800: #fff;
-            --gray-900: #fff;
-            --gradient-primary: linear-gradient(135deg, #000 0%, #222 100%);
-            --gradient-secondary: linear-gradient(135deg, #f59e0b 0%, #f97316 50%, #ea580c 100%);
-            --gradient-accent: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            /* New Color Palette - Modern Ocean & Sunset Theme */
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #3b82f6;
+            --secondary: #f97316;
+            --secondary-dark: #ea580c;
+            --secondary-light: #fb923c;
+            --accent: #06b6d4;
+            --accent-dark: #0891b2;
+            --accent-light: #22d3ee;
+            
+            /* Neutral Colors */
+            --dark: #0f172a;
+            --dark-light: #1e293b;
+            --light: #f8fafc;
+            --white: #ffffff;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            
+            /* New Gradients */
+            --gradient-primary: linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%);
+            --gradient-secondary: linear-gradient(135deg, #f97316 0%, #fb923c 50%, #fdba74 100%);
+            --gradient-accent: linear-gradient(135deg, #06b6d4 0%, #22d3ee 50%, #67e8f9 100%);
+            --gradient-dark: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            --gradient-hero: linear-gradient(135deg, #1e40af 0%, #3b82f6 25%, #06b6d4 50%, #0891b2 75%, #0c4a6e 100%);
+            --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            
+            /* Enhanced Shadows */
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            --shadow-glow: 0 0 20px rgba(37, 99, 235, 0.3);
+            --shadow-glow-secondary: 0 0 20px rgba(249, 115, 22, 0.3);
         }
         body {
             font-family: '<?php echo $lang === 'ar' ? 'Cairo' : 'Inter'; ?>', sans-serif;
             background: var(--light);
             color: var(--gray-800);
             overflow-x: hidden;
+            line-height: 1.6;
         }
         .navbar {
             background: var(--white);
@@ -289,6 +324,34 @@ if ($row = $project_views_query->fetch_assoc()) {
             border-radius: 0.5rem;
             padding: 0.5em 1em;
         }
+        .badge-success {
+            background: var(--accent);
+            color: white;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            padding: 0.5em 1em;
+        }
+        .badge-warning {
+            background: var(--secondary);
+            color: white;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            padding: 0.5em 1em;
+        }
+        .badge-info {
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            padding: 0.5em 1em;
+        }
+        .badge-secondary {
+            background: var(--gray-500);
+            color: white;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            padding: 0.5em 1em;
+        }
         @media (max-width: 768px) {
             .dashboard-title {
                 font-size: 2rem;
@@ -330,18 +393,24 @@ if ($row = $project_views_query->fetch_assoc()) {
                         <?php echo $lang === 'en' ? 'Add Project' : 'إضافة مشروع'; ?>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="portfolio.php">
-                        <i class="fas fa-briefcase me-1"></i>
-                        <?php echo $lang === 'en' ? 'Portfolio' : 'المحفظة'; ?>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="profile.php">
-                        <i class="fas fa-user me-1"></i>
-                        <?php echo $lang === 'en' ? 'Profile' : 'الملف الشخصي'; ?>
-                    </a>
-                </li>
+                                     <li class="nav-item">
+                         <a class="nav-link" href="portfolio.php">
+                             <i class="fas fa-briefcase me-1"></i>
+                             <?php echo $lang === 'en' ? 'My Portfolio' : 'محفظتي'; ?>
+                         </a>
+                     </li>
+                     <li class="nav-item">
+                         <a class="nav-link" href="browse_users.php">
+                             <i class="fas fa-users me-1"></i>
+                             <?php echo $lang === 'en' ? 'Discover' : 'اكتشف'; ?>
+                         </a>
+                     </li>
+                     <li class="nav-item">
+                         <a class="nav-link" href="profile.php">
+                             <i class="fas fa-user me-1"></i>
+                             <?php echo $lang === 'en' ? 'Profile' : 'الملف الشخصي'; ?>
+                         </a>
+                     </li>
             </ul>
             <div class="d-flex align-items-center">
                 <div class="dropdown">
@@ -383,16 +452,16 @@ if ($row = $project_views_query->fetch_assoc()) {
             <div class="row mt-4 mb-2" data-aos="fade-up" data-aos-delay="150">
                 <div class="col-6 col-md-3 mb-2">
                     <div class="stats-card text-center p-3" style="background:var(--white);border-radius:1rem;box-shadow:var(--shadow-lg);">
-                        <div class="stats-icon mb-1"><i class="fas fa-eye"></i></div>
-                        <div class="stats-number"><?php echo $portfolio_views; ?></div>
-                        <div class="stats-label"><?php echo $lang === 'en' ? 'Portfolio Views' : 'مشاهدات المحفظة'; ?></div>
+                        <div class="stats-icon mb-1 text-dark"><i class="fas fa-eye"></i></div>
+                        <div class="stats-number text-dark"><?php echo $portfolio_views; ?></div>
+                        <div class="stats-label text-dark"><?php echo $lang === 'en' ? 'Portfolio Views' : 'مشاهدات المحفظة'; ?></div>
                     </div>
                 </div>
                 <div class="col-6 col-md-3 mb-2">
                     <div class="stats-card text-center p-3" style="background:var(--white);border-radius:1rem;box-shadow:var(--shadow-lg);">
-                        <div class="stats-icon mb-1"><i class="fas fa-layer-group"></i></div>
-                        <div class="stats-number"><?php echo $project_views; ?></div>
-                        <div class="stats-label"><?php echo $lang === 'en' ? 'Project Views' : 'مشاهدات المشاريع'; ?></div>
+                        <div class="stats-icon mb-1 text-dark"><i class="fas fa-layer-group"></i></div>
+                        <div class="stats-number text-dark"><?php echo $project_views; ?></div>
+                        <div class="stats-label text-dark"><?php echo $lang === 'en' ? 'Project Views' : 'مشاهدات المشاريع'; ?></div>
                     </div>
                 </div>
             </div>
@@ -448,18 +517,35 @@ if ($row = $project_views_query->fetch_assoc()) {
                             <td><?php echo $i++; ?></td>
                             <td><?php echo htmlspecialchars($project['title']); ?></td>
                             <td>
-                                <?php if ($project['status'] === 'published'): ?>
-                                    <span class="badge badge-published"><?php echo $current_content['published']; ?></span>
-                                <?php else: ?>
-                                    <span class="badge badge-draft"><?php echo $current_content['draft']; ?></span>
-                                <?php endif; ?>
+                                <?php 
+                                $status_class = '';
+                                $status_text = '';
+                                switch ($project['status']) {
+                                    case 'completed':
+                                        $status_class = 'badge-success';
+                                        $status_text = $lang === 'en' ? 'Completed' : 'مكتمل';
+                                        break;
+                                    case 'ongoing':
+                                        $status_class = 'badge-warning';
+                                        $status_text = $lang === 'en' ? 'Ongoing' : 'قيد التنفيذ';
+                                        break;
+                                    case 'planned':
+                                        $status_class = 'badge-info';
+                                        $status_text = $lang === 'en' ? 'Planned' : 'مخطط';
+                                        break;
+                                    default:
+                                        $status_class = 'badge-secondary';
+                                        $status_text = $lang === 'en' ? 'Unknown' : 'غير معروف';
+                                }
+                                ?>
+                                <span class="badge <?php echo $status_class; ?>"><?php echo $status_text; ?></span>
                             </td>
                             <td><?php echo date('Y-m-d', strtotime($project['created_at'])); ?></td>
                             <td>
                                 <a href="project.php?id=<?php echo $project['id']; ?>" class="btn btn-outline btn-sm">
                                     <i class="fas fa-eye"></i> <?php echo $current_content['view']; ?>
                                 </a>
-                                <a href="add_project.php?edit=<?php echo $project['id']; ?>" class="btn btn-outline btn-sm">
+                                                                 <a href="add_project.php?edit=1&id=<?php echo $project['id']; ?>" class="btn btn-outline btn-sm">
                                     <i class="fas fa-edit"></i> <?php echo $current_content['edit']; ?>
                                 </a>
                                 <a href="dashboard.php?delete=<?php echo $project['id']; ?>" class="btn btn-outline btn-sm" onclick="return confirm('<?php echo $lang === 'en' ? 'Are you sure?' : 'هل أنت متأكد؟'; ?>');">

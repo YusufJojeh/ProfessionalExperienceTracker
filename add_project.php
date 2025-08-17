@@ -83,6 +83,34 @@ $content = [
 
 $current_content = $content[$lang];
 
+// Check if editing a project
+$edit_mode = isset($_GET['edit']) && $_GET['edit'] == '1';
+$project_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$project = null;
+
+if ($edit_mode && $project_id > 0) {
+    // Get project data for editing
+    $stmt = $conn->prepare("SELECT * FROM projects WHERE id = ? AND user_id = ?");
+    $stmt->bind_param("ii", $project_id, $_SESSION['user_id']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows > 0) {
+        $project = $result->fetch_assoc();
+        // Update content for edit mode
+        $current_content['title'] = $lang === 'en' ? 'Edit Project' : 'تعديل المشروع';
+        $current_content['add_project'] = $lang === 'en' ? 'Update Project' : 'تحديث المشروع';
+        $current_content['project_added'] = $lang === 'en' ? 'Project updated successfully!' : 'تم تحديث المشروع بنجاح!';
+        $current_content['project_error'] = $lang === 'en' ? 'Failed to update project. Please try again.' : 'فشل في تحديث المشروع. يرجى المحاولة مرة أخرى.';
+        $current_content['save_draft'] = $lang === 'en' ? 'Update Draft' : 'تحديث المسودة';
+        $current_content['publish_project'] = $lang === 'en' ? 'Update & Publish' : 'تحديث ونشر';
+    } else {
+        // Project not found or doesn't belong to user
+        header('Location: dashboard.php');
+        exit();
+    }
+    $stmt->close();
+}
+
 // Get categories
 $stmt = $conn->prepare("SELECT * FROM categories ORDER BY name_en");
 $stmt->execute();
@@ -143,15 +171,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
-    // Insert project if no errors
+    // Insert or update project if no errors
     if (empty($errors)) {
-        $stmt = $conn->prepare("INSERT INTO projects (user_id, title, description, category_id, status, technologies, project_link, github_link, image_path, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
-        $stmt->bind_param("ississsss", $user_id, $title, $description, $category_id, $status, $technologies, $project_link, $github_link, $image_path);
+        if ($edit_mode && $project_id > 0) {
+            // Update existing project
+            if ($image_path) {
+                // New image uploaded
+                $stmt = $conn->prepare("UPDATE projects SET title = ?, description = ?, category_id = ?, status = ?, technologies = ?, project_link = ?, github_link = ?, image_path = ?, updated_at = NOW() WHERE id = ? AND user_id = ?");
+                $stmt->bind_param("ssisssssii", $title, $description, $category_id, $status, $technologies, $project_link, $github_link, $image_path, $project_id, $user_id);
+            } else {
+                // Keep existing image
+                $stmt = $conn->prepare("UPDATE projects SET title = ?, description = ?, category_id = ?, status = ?, technologies = ?, project_link = ?, github_link = ?, updated_at = NOW() WHERE id = ? AND user_id = ?");
+                $stmt->bind_param("ssisssssi", $title, $description, $category_id, $status, $technologies, $project_link, $github_link, $project_id, $user_id);
+            }
+        } else {
+            // Insert new project
+            $stmt = $conn->prepare("INSERT INTO projects (user_id, title, description, category_id, status, technologies, project_link, github_link, image_path, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+            $stmt->bind_param("ississsss", $user_id, $title, $description, $category_id, $status, $technologies, $project_link, $github_link, $image_path);
+        }
         
         if ($stmt->execute()) {
             $success_message = $current_content['project_added'];
-            // Clear form data
+            if ($edit_mode) {
+                // Redirect to dashboard after successful update
+                header('Location: dashboard.php?success=project_updated');
+                exit();
+            } else {
+                // Clear form data only for new projects
             $_POST = array();
+            }
         } else {
             $error_message = $current_content['project_error'];
         }
@@ -180,24 +228,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     <style>
         :root {
-            --primary: #fff;
-            --primary-dark: #e2e8f0;
-            --secondary: #f59e0b;
-            --accent: #10b981;
-            --dark: #fff;
-            --light: #181818;
-            --white: #000;
-            --gray-100: #222;
-            --gray-200: #333;
-            --gray-300: #444;
-            --gray-400: #bdbdbd;
-            --gray-500: #bdbdbd;
-            --gray-600: #bdbdbd;
-            --gray-700: #fff;
-            --gray-800: #fff;
-            --gray-900: #fff;
+            /* New Color Palette - Modern Ocean & Sunset Theme */
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #3b82f6;
+            --secondary: #f97316;
+            --secondary-dark: #ea580c;
+            --secondary-light: #fb923c;
+            --accent: #06b6d4;
+            --accent-dark: #0891b2;
+            --accent-light: #22d3ee;
             
-            --gradient-primary: linear-gradient(135deg, #000 0%, #222 100%);
+            /* Neutral Colors */
+            --dark: #0f172a;
+            --dark-light: #1e293b;
+            --light: #f8fafc;
+            --white: #ffffff;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            
+            /* New Gradients */
+            --gradient-primary: linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%);
+            --gradient-secondary: linear-gradient(135deg, #f97316 0%, #fb923c 50%, #fdba74 100%);
+            --gradient-accent: linear-gradient(135deg, #06b6d4 0%, #22d3ee 50%, #67e8f9 100%);
+            --gradient-dark: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            --gradient-hero: linear-gradient(135deg, #1e40af 0%, #3b82f6 25%, #06b6d4 50%, #0891b2 75%, #0c4a6e 100%);
+            --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            
+            /* Enhanced Shadows */
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            --shadow-glow: 0 0 20px rgba(37, 99, 235, 0.3);
+            --shadow-glow-secondary: 0 0 20px rgba(249, 115, 22, 0.3);
+        }
             --gradient-secondary: linear-gradient(135deg, #f59e0b 0%, #f97316 50%, #ea580c 100%);
             --gradient-accent: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
             --gradient-dark: linear-gradient(135deg, #000 0%, #222 50%, #444 100%);
@@ -670,23 +745,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="add_project.php">
+                         <a class="nav-link <?php echo $edit_mode ? '' : 'active'; ?>" href="add_project.php">
                             <i class="fas fa-plus me-1"></i>
                             <?php echo $lang === 'en' ? 'Add Project' : 'إضافة مشروع'; ?>
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="portfolio.php">
-                            <i class="fas fa-briefcase me-1"></i>
-                            <?php echo $lang === 'en' ? 'Portfolio' : 'المحفظة'; ?>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="profile.php">
-                            <i class="fas fa-user me-1"></i>
-                            <?php echo $lang === 'en' ? 'Profile' : 'الملف الشخصي'; ?>
-                        </a>
-                    </li>
+                                         <li class="nav-item">
+                         <a class="nav-link" href="portfolio.php">
+                             <i class="fas fa-briefcase me-1"></i>
+                             <?php echo $lang === 'en' ? 'My Portfolio' : 'محفظتي'; ?>
+                         </a>
+                     </li>
+                     <li class="nav-item">
+                         <a class="nav-link" href="browse_users.php">
+                             <i class="fas fa-users me-1"></i>
+                             <?php echo $lang === 'en' ? 'Discover' : 'اكتشف'; ?>
+                         </a>
+                     </li>
+                     <li class="nav-item">
+                         <a class="nav-link" href="profile.php">
+                             <i class="fas fa-user me-1"></i>
+                             <?php echo $lang === 'en' ? 'Profile' : 'الملف الشخصي'; ?>
+                         </a>
+                     </li>
                 </ul>
                 
                 <div class="d-flex align-items-center">
@@ -726,7 +807,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <?php echo $current_content['title']; ?>
                 </h1>
                 <p class="page-subtitle" data-aos="fade-up" data-aos-delay="100">
+                    <?php if ($edit_mode): ?>
+                        <?php echo $lang === 'en' ? 'Update your project details and showcase your work' : 'حدث تفاصيل مشروعك وعرض عملك'; ?>
+                    <?php else: ?>
                     <?php echo $lang === 'en' ? 'Create a new project to showcase your work' : 'أنشئ مشروعاً جديداً لعرض عملك'; ?>
+                    <?php endif; ?>
                 </p>
             </div>
         </div>
@@ -758,6 +843,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <!-- Form Container -->
                     <div class="form-container" data-aos="fade-up" data-aos-delay="200">
                         <form method="POST" enctype="multipart/form-data" id="projectForm">
+                            <?php if ($edit_mode && $project_id > 0): ?>
+                                <input type="hidden" name="project_id" value="<?php echo $project_id; ?>">
+                            <?php endif; ?>
                             <!-- Project Information Section -->
                             <div class="form-section">
                                 <h2 class="section-title">
@@ -768,14 +856,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="form-group">
                                     <label class="form-label"><?php echo $current_content['project_title']; ?> *</label>
                                     <input type="text" class="form-control" name="title" 
-                                           value="<?php echo isset($_POST['title']) ? htmlspecialchars($_POST['title']) : ''; ?>"
+                                           value="<?php echo isset($_POST['title']) ? htmlspecialchars($_POST['title']) : ($project ? htmlspecialchars($project['title']) : ''); ?>"
                                            placeholder="<?php echo $current_content['project_title_placeholder']; ?>" required>
                                 </div>
                                 
                                 <div class="form-group">
                                     <label class="form-label"><?php echo $current_content['project_description']; ?> *</label>
                                     <textarea class="form-control form-textarea" name="description" 
-                                              placeholder="<?php echo $current_content['project_description_placeholder']; ?>" required><?php echo isset($_POST['description']) ? htmlspecialchars($_POST['description']) : ''; ?></textarea>
+                                              placeholder="<?php echo $current_content['project_description_placeholder']; ?>" required><?php echo isset($_POST['description']) ? htmlspecialchars($_POST['description']) : ($project ? htmlspecialchars($project['description']) : ''); ?></textarea>
                                 </div>
                                 
                                 <div class="row">
@@ -784,9 +872,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <label class="form-label"><?php echo $current_content['project_category']; ?> *</label>
                                             <select class="form-control form-select" name="category_id" required>
                                                 <option value=""><?php echo $current_content['select_category']; ?></option>
-                                                <?php while ($category = $categories->fetch_assoc()): ?>
+                                                <?php 
+                                                $categories->data_seek(0); // Reset pointer to beginning
+                                                while ($category = $categories->fetch_assoc()): 
+                                                    $selected = (isset($_POST['category_id']) && $_POST['category_id'] == $category['id']) || 
+                                                               ($project && $project['category_id'] == $category['id']);
+                                                ?>
                                                     <option value="<?php echo $category['id']; ?>" 
-                                                            <?php echo (isset($_POST['category_id']) && $_POST['category_id'] == $category['id']) ? 'selected' : ''; ?>>
+                                                            <?php echo $selected ? 'selected' : ''; ?>>
                                                         <?php echo $lang === 'en' ? $category['name_en'] : $category['name_ar']; ?>
                                                     </option>
                                                 <?php endwhile; ?>
@@ -797,11 +890,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <div class="form-group">
                                             <label class="form-label"><?php echo $current_content['project_status']; ?></label>
                                             <select class="form-control form-select" name="status">
-                                                <option value="draft" <?php echo (isset($_POST['status']) && $_POST['status'] === 'draft') ? 'selected' : ''; ?>>
-                                                    <?php echo $current_content['status_draft']; ?>
+                                                <?php 
+                                                $status_selected = isset($_POST['status']) ? $_POST['status'] : ($project ? $project['status'] : 'planned');
+                                                ?>
+                                                <option value="planned" <?php echo ($status_selected === 'planned') ? 'selected' : ''; ?>>
+                                                    <?php echo $lang === 'en' ? 'Planned' : 'مخطط'; ?>
                                                 </option>
-                                                <option value="published" <?php echo (isset($_POST['status']) && $_POST['status'] === 'published') ? 'selected' : ''; ?>>
-                                                    <?php echo $current_content['status_published']; ?>
+                                                <option value="ongoing" <?php echo ($status_selected === 'ongoing') ? 'selected' : ''; ?>>
+                                                    <?php echo $lang === 'en' ? 'Ongoing' : 'قيد التنفيذ'; ?>
+                                                </option>
+                                                <option value="completed" <?php echo ($status_selected === 'completed') ? 'selected' : ''; ?>>
+                                                    <?php echo $lang === 'en' ? 'Completed' : 'مكتمل'; ?>
                                                 </option>
                                             </select>
                                         </div>
@@ -819,7 +918,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="form-group">
                                     <label class="form-label"><?php echo $current_content['project_technologies']; ?></label>
                                     <input type="text" class="form-control" name="technologies" 
-                                           value="<?php echo isset($_POST['technologies']) ? htmlspecialchars($_POST['technologies']) : ''; ?>"
+                                           value="<?php echo isset($_POST['technologies']) ? htmlspecialchars($_POST['technologies']) : ($project ? htmlspecialchars($project['technologies']) : ''); ?>"
                                            placeholder="<?php echo $current_content['technologies_placeholder']; ?>">
                                 </div>
                                 
@@ -828,7 +927,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <div class="form-group">
                                             <label class="form-label"><?php echo $current_content['project_link']; ?></label>
                                             <input type="url" class="form-control" name="project_link" 
-                                                   value="<?php echo isset($_POST['project_link']) ? htmlspecialchars($_POST['project_link']) : ''; ?>"
+                                                   value="<?php echo isset($_POST['project_link']) ? htmlspecialchars($_POST['project_link']) : ($project ? htmlspecialchars($project['project_link']) : ''); ?>"
                                                    placeholder="<?php echo $current_content['project_link_placeholder']; ?>">
                                         </div>
                                     </div>
@@ -836,7 +935,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <div class="form-group">
                                             <label class="form-label"><?php echo $current_content['github_link']; ?></label>
                                             <input type="url" class="form-control" name="github_link" 
-                                                   value="<?php echo isset($_POST['github_link']) ? htmlspecialchars($_POST['github_link']) : ''; ?>"
+                                                   value="<?php echo isset($_POST['github_link']) ? htmlspecialchars($_POST['github_link']) : ($project ? htmlspecialchars($project['github_link']) : ''); ?>"
                                                    placeholder="<?php echo $current_content['github_link_placeholder']; ?>">
                                         </div>
                                     </div>
@@ -844,11 +943,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 
                                 <div class="form-group">
                                     <label class="form-label"><?php echo $current_content['project_image']; ?></label>
+                                    <?php if ($edit_mode && $project && !empty($project['image_path']) && file_exists($project['image_path'])): ?>
+                                        <div class="current-image mb-3">
+                                            <label class="form-label"><?php echo $lang === 'en' ? 'Current Image:' : 'الصورة الحالية:'; ?></label>
+                                            <div class="current-image-container">
+                                                <img src="<?php echo htmlspecialchars($project['image_path']); ?>" alt="Current Project Image" style="max-width: 200px; max-height: 150px; border-radius: 0.5rem; border: 2px solid var(--gray-200);">
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
                                     <div class="file-upload">
                                         <input type="file" class="file-upload-input" name="image" id="imageInput" accept="image/*">
                                         <label for="imageInput" class="file-upload-label">
                                             <i class="fas fa-cloud-upload-alt"></i>
-                                            <span><?php echo $current_content['choose_file']; ?></span>
+                                            <span><?php echo $edit_mode ? ($lang === 'en' ? 'Choose New File' : 'اختر ملف جديد') : $current_content['choose_file']; ?></span>
                                         </label>
                                         <div class="file-name" id="fileName"><?php echo $current_content['no_file_chosen']; ?></div>
                                     </div>

@@ -32,6 +32,7 @@ $comments_query = "SELECT c.*, u.full_name, u.username
                    FROM comments c 
                    JOIN users u ON c.user_id = u.id 
                    WHERE c.project_id = $project_id 
+                   AND c.user_id != {$project['user_id']}
                    ORDER BY c.created_at DESC";
 $comments_result = mysqli_query($conn, $comments_query);
 
@@ -69,10 +70,15 @@ $content = [
 ];
 $current_content = $content[$lang];
 
+// Check if current user is the project owner
+$is_project_owner = isset($_SESSION['user_id']) && $_SESSION['user_id'] == $project['user_id'];
+
 // Handle comment submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
     if (!isset($_SESSION['user_id'])) {
         $error_message = $lang === 'en' ? 'You must be logged in to comment.' : 'يجب تسجيل الدخول لإضافة تعليق.';
+    } elseif ($is_project_owner) {
+        $error_message = $lang === 'en' ? 'You cannot comment on your own project.' : 'لا يمكنك التعليق على مشروعك الخاص.';
     } else {
         $comment_text = trim($_POST['comment']);
         if ($comment_text !== '') {
@@ -105,26 +111,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <style>
         :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --secondary: #f59e0b;
-            --accent: #10b981;
+            /* New Color Palette - Modern Ocean & Sunset Theme */
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #3b82f6;
+            --secondary: #f97316;
+            --secondary-dark: #ea580c;
+            --secondary-light: #fb923c;
+            --accent: #06b6d4;
+            --accent-dark: #0891b2;
+            --accent-light: #22d3ee;
+            
+            /* Neutral Colors */
             --dark: #0f172a;
+            --dark-light: #1e293b;
             --light: #f8fafc;
             --white: #ffffff;
-            --gray-100: #f1f5f9;
-            --gray-200: #e2e8f0;
-            --gray-300: #cbd5e1;
-            --gray-400: #94a3b8;
-            --gray-500: #64748b;
-            --gray-600: #475569;
-            --gray-700: #334155;
-            --gray-800: #1e293b;
-            --gray-900: #0f172a;
-            --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
-            --gradient-secondary: linear-gradient(135deg, #f59e0b 0%, #f97316 50%, #ea580c 100%);
-            --gradient-accent: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            
+            /* New Gradients */
+            --gradient-primary: linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%);
+            --gradient-secondary: linear-gradient(135deg, #f97316 0%, #fb923c 50%, #fdba74 100%);
+            --gradient-accent: linear-gradient(135deg, #06b6d4 0%, #22d3ee 50%, #67e8f9 100%);
+            --gradient-dark: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            --gradient-hero: linear-gradient(135deg, #1e40af 0%, #3b82f6 25%, #06b6d4 50%, #0891b2 75%, #0c4a6e 100%);
+            --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            
+            /* Enhanced Shadows */
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            --shadow-glow: 0 0 20px rgba(37, 99, 235, 0.3);
+            --shadow-glow-secondary: 0 0 20px rgba(249, 115, 22, 0.3);
         }
         body {
             font-family: '<?php echo $lang === 'ar' ? 'Cairo' : 'Inter'; ?>', sans-serif;
@@ -358,6 +388,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
             background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             color: white;
         }
+        .alert-info {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary-dark);
+            border-left: 4px solid var(--primary);
+        }
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--secondary-dark);
+            border-left: 4px solid var(--secondary);
+        }
         @media (max-width: 768px) {
             .project-title {
                 font-size: 2rem;
@@ -463,13 +503,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
             </div>
             <?php endwhile; ?>
         <?php endif; ?>
-        <form method="POST" class="add-comment-form" data-aos="fade-up" data-aos-delay="400">
-            <label class="form-label" for="comment"><?php echo $current_content['your_comment']; ?></label>
-            <textarea class="form-control mb-3" name="comment" id="comment" rows="3" required></textarea>
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-paper-plane"></i> <?php echo $current_content['submit']; ?>
-            </button>
-        </form>
+        
+        <?php if ($is_project_owner): ?>
+            <div class="alert alert-info" data-aos="fade-up" data-aos-delay="400">
+                <i class="fas fa-info-circle me-2"></i>
+                <?php echo $lang === 'en' ? 'You cannot comment on your own project. You can view comments from other users below.' : 'لا يمكنك التعليق على مشروعك الخاص. يمكنك مشاهدة تعليقات المستخدمين الآخرين أدناه.'; ?>
+            </div>
+        <?php elseif (!isset($_SESSION['user_id'])): ?>
+            <div class="alert alert-warning" data-aos="fade-up" data-aos-delay="400">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <?php echo $lang === 'en' ? 'Please log in to add a comment.' : 'يرجى تسجيل الدخول لإضافة تعليق.'; ?>
+            </div>
+        <?php else: ?>
+            <form method="POST" class="add-comment-form" data-aos="fade-up" data-aos-delay="400">
+                <label class="form-label" for="comment"><?php echo $current_content['your_comment']; ?></label>
+                <textarea class="form-control mb-3" name="comment" id="comment" rows="3" required></textarea>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i> <?php echo $current_content['submit']; ?>
+                </button>
+            </form>
+        <?php endif; ?>
     </div>
     <div class="text-center mt-4">
         <a href="portfolio.php" class="btn btn-outline">
