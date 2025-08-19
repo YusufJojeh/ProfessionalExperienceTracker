@@ -5,6 +5,10 @@ require_once 'config/database.php';
 // Get current language
 $lang = isset($_SESSION['language']) ? $_SESSION['language'] : 'en';
 
+// Check user role for navigation and content
+$is_logged_in = isset($_SESSION['user_id']);
+$is_admin = $is_logged_in && isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
+
 // Language content
 $content = [
     'en' => [
@@ -12,6 +16,10 @@ $content = [
         'subtitle' => 'Where Professional Excellence Meets Digital Innovation',
         'hero_title' => 'Transform Your Professional Journey Into Digital Excellence',
         'hero_subtitle' => 'Create stunning portfolios, showcase your expertise, and connect with opportunities worldwide. The ultimate platform for professionals who demand excellence.',
+        'admin_welcome' => 'Welcome back, Administrator!',
+        'admin_subtitle' => 'Manage your platform and oversee user activities with powerful admin tools.',
+        'user_welcome' => 'Welcome back to your professional journey!',
+        'user_subtitle' => 'Continue building your portfolio and connecting with opportunities worldwide.',
         'features' => [
             'Smart Portfolio Builder' => 'Create a portfolio with stunning templates',
             'Real-time Analytics' => 'Track your portfolio performance and visitor insights',
@@ -22,6 +30,21 @@ $content = [
         ],
         'cta_primary' => 'Start Your Journey',
         'cta_secondary' => 'View Showcase',
+        'admin_dashboard' => 'Admin Dashboard',
+        'user_dashboard' => 'User Dashboard',
+        'manage_users' => 'Manage Users',
+        'manage_projects' => 'Manage Projects',
+        'manage_categories' => 'Manage Categories',
+        'platform_settings' => 'Platform Settings',
+        'add_project' => 'Add Project',
+        'my_portfolio' => 'My Portfolio',
+        'discover' => 'Discover',
+        'profile' => 'Profile',
+        'logout' => 'Logout',
+        'login' => 'Login',
+        'register' => 'Register',
+        'features_nav' => 'Features',
+        'testimonials_nav' => 'Testimonials',
         'stats' => [
             'users' => 'Active Professionals',
             'projects' => 'Portfolios Created',
@@ -51,6 +74,10 @@ $content = [
         'subtitle' => 'حيث يلتقي التميز المهني بالابتكار الرقمي',
         'hero_title' => 'حوّل رحلتك المهنية إلى تميز رقمي',
         'hero_subtitle' => 'أنشئ محافظ مذهلة، وعرّف بخبراتك، وتواصل مع الفرص حول العالم. المنصة المثالية للمهنيين الباحثين عن التميز.',
+        'admin_welcome' => 'مرحباً بعودتك، المدير!',
+        'admin_subtitle' => 'أدر منصتك واشرف على أنشطة المستخدمين بأدوات إدارية قوية.',
+        'user_welcome' => 'مرحباً بعودتك إلى رحلتك المهنية!',
+        'user_subtitle' => 'استمر في بناء محفظتك والتواصل مع الفرص حول العالم.',
         'features' => [
             'منشئ المحفظة الذكي' => 'أنشئ محفظة باستخدام قوالب مذهلة',
             'التحليلات المباشرة' => 'تتبع أداء محفظتك ورؤى الزوار',
@@ -61,6 +88,21 @@ $content = [
         ],
         'cta_primary' => 'ابدأ رحلتك',
         'cta_secondary' => 'عرض المعرض',
+        'admin_dashboard' => 'لوحة المدير',
+        'user_dashboard' => 'لوحة المستخدم',
+        'manage_users' => 'إدارة المستخدمين',
+        'manage_projects' => 'إدارة المشاريع',
+        'manage_categories' => 'إدارة الفئات',
+        'platform_settings' => 'إعدادات المنصة',
+        'add_project' => 'إضافة مشروع',
+        'my_portfolio' => 'محفظتي',
+        'discover' => 'اكتشف',
+        'profile' => 'الملف الشخصي',
+        'logout' => 'تسجيل الخروج',
+        'login' => 'تسجيل الدخول',
+        'register' => 'التسجيل',
+        'features_nav' => 'المميزات',
+        'testimonials_nav' => 'الشهادات',
         'stats' => [
             'users' => 'مهني نشط',
             'projects' => 'محفظة تم إنشاؤها',
@@ -245,6 +287,57 @@ $current_content = $content[$lang];
             color: var(--primary) !important;
             transform: translateY(-2px);
             box-shadow: var(--shadow-md);
+        }
+
+        /* User Avatar and Dropdown Styles */
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .dropdown-menu {
+            border: none;
+            box-shadow: var(--shadow-xl);
+            border-radius: 1rem;
+            padding: 0.5rem;
+            min-width: 220px;
+            margin-top: 0.5rem;
+            background: var(--white);
+        }
+
+        .dropdown-item {
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            color: var(--gray-700);
+            display: flex;
+            align-items: center;
+        }
+
+        .dropdown-item:hover {
+            background: var(--gray-100);
+            color: var(--primary);
+            transform: translateX(5px);
+        }
+
+        .dropdown-item i {
+            width: 20px;
+            text-align: center;
+            margin-right: 0.5rem;
+        }
+
+        .dropdown-divider {
+            margin: 0.5rem 0;
+            border-color: var(--gray-200);
         }
 
         /* Revolutionary Hero Section */
@@ -774,6 +867,29 @@ $current_content = $content[$lang];
             .testimonial-card {
                 padding: 2.5rem 2rem;
             }
+            
+            .dropdown-menu {
+                position: static !important;
+                transform: none !important;
+                width: 100%;
+                margin-top: 0.5rem;
+                box-shadow: none;
+                border: 1px solid var(--gray-200);
+            }
+            
+            .user-avatar {
+                width: 28px;
+                height: 28px;
+                font-size: 0.75rem;
+            }
+            
+            .navbar-nav {
+                text-align: center;
+            }
+            
+            .nav-link {
+                margin: 0.25rem 0;
+            }
         }
 
         /* Additional Animations */
@@ -820,29 +936,82 @@ $current_content = $content[$lang];
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="#features"><?php echo $lang === 'en' ? 'Features' : 'المميزات'; ?></a>
+                        <a class="nav-link" href="#features"><?php echo $current_content['features_nav']; ?></a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#testimonials"><?php echo $lang === 'en' ? 'Testimonials' : 'الشهادات'; ?></a>
+                        <a class="nav-link" href="#testimonials"><?php echo $current_content['testimonials_nav']; ?></a>
                     </li>
-                    <?php if (isset($_SESSION['user_id'])): ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="dashboard.php"><?php echo $lang === 'en' ? 'Dashboard' : 'لوحة التحكم'; ?></a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="browse_users.php"><?php echo $lang === 'en' ? 'Discover' : 'اكتشف'; ?></a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="logout.php"><?php echo $lang === 'en' ? 'Logout' : 'تسجيل الخروج'; ?></a>
-                        </li>
-                    <?php else: ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="login.php"><?php echo $lang === 'en' ? 'Login' : 'تسجيل الدخول'; ?></a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="register.php"><?php echo $lang === 'en' ? 'Register' : 'التسجيل'; ?></a>
-                        </li>
-                    <?php endif; ?>
+                                         <?php if ($is_logged_in): ?>
+                         <?php if ($is_admin): ?>
+                             <li class="nav-item">
+                                 <a class="nav-link" href="admin.php"><?php echo $current_content['admin_dashboard']; ?></a>
+                             </li>
+                             <li class="nav-item">
+                                 <a class="nav-link" href="manage_users.php"><?php echo $current_content['manage_users']; ?></a>
+                             </li>
+                             <li class="nav-item">
+                                 <a class="nav-link" href="manage_projects.php"><?php echo $current_content['manage_projects']; ?></a>
+                             </li>
+                             <li class="nav-item">
+                                 <a class="nav-link" href="manage_categories.php"><?php echo $current_content['manage_categories']; ?></a>
+                             </li>
+                             <li class="nav-item">
+                                 <a class="nav-link" href="platform_settings.php"><?php echo $current_content['platform_settings']; ?></a>
+                             </li>
+                         <?php else: ?>
+                             <li class="nav-item">
+                                 <a class="nav-link" href="dashboard.php"><?php echo $current_content['user_dashboard']; ?></a>
+                             </li>
+                             <li class="nav-item">
+                                 <a class="nav-link" href="add_project.php"><?php echo $current_content['add_project']; ?></a>
+                             </li>
+                             <li class="nav-item">
+                                 <a class="nav-link" href="portfolio.php"><?php echo $current_content['my_portfolio']; ?></a>
+                             </li>
+                             <li class="nav-item">
+                                 <a class="nav-link" href="browse_users.php"><?php echo $current_content['discover']; ?></a>
+                             </li>
+                         <?php endif; ?>
+                         
+                         <!-- User Menu Dropdown -->
+                         <li class="nav-item dropdown">
+                             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                 <div class="user-avatar me-2">
+                                     <?php if ($is_admin): ?>
+                                         <i class="fas fa-user-shield"></i>
+                                     <?php else: ?>
+                                         <?php echo strtoupper(substr($_SESSION['user_name'], 0, 1)); ?>
+                                     <?php endif; ?>
+                                 </div>
+                                 <span class="d-none d-md-inline"><?php echo $_SESSION['user_name']; ?></span>
+                                 <i class="fas fa-chevron-down ms-1 d-none d-md-inline"></i>
+                             </a>
+                             <ul class="dropdown-menu">
+                                 <li><a class="dropdown-item" href="profile.php">
+                                     <i class="fas fa-user me-2"></i>
+                                     <?php echo $current_content['profile']; ?>
+                                 </a></li>
+                                 <?php if ($is_admin): ?>
+                                     <li><a class="dropdown-item" href="dashboard.php">
+                                         <i class="fas fa-user me-2"></i>
+                                         <?php echo $current_content['user_dashboard']; ?>
+                                     </a></li>
+                                 <?php endif; ?>
+                                 <li><hr class="dropdown-divider"></li>
+                                 <li><a class="dropdown-item" href="logout.php">
+                                     <i class="fas fa-sign-out-alt me-2"></i>
+                                     <?php echo $current_content['logout']; ?>
+                                 </a></li>
+                             </ul>
+                         </li>
+                     <?php else: ?>
+                         <li class="nav-item">
+                             <a class="nav-link" href="login.php"><?php echo $current_content['login']; ?></a>
+                         </li>
+                         <li class="nav-item">
+                             <a class="nav-link" href="register.php"><?php echo $current_content['register']; ?></a>
+                         </li>
+                     <?php endif; ?>
                 </ul>
             </div>
         </div>
@@ -865,18 +1034,60 @@ $current_content = $content[$lang];
                 <path d="M35 50 L45 60 L65 40" stroke="url(#iconGradient)" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
             
-            <h1 class="hero-title" data-aos="fade-up"><?php echo $current_content['hero_title']; ?></h1>
-            <p class="hero-subtitle" data-aos="fade-up" data-aos-delay="200"><?php echo $current_content['hero_subtitle']; ?></p>
+            <h1 class="hero-title" data-aos="fade-up">
+                <?php if ($is_logged_in): ?>
+                    <?php if ($is_admin): ?>
+                        <?php echo $current_content['admin_welcome']; ?>
+                    <?php else: ?>
+                        <?php echo $current_content['user_welcome']; ?>
+                    <?php endif; ?>
+                <?php else: ?>
+                    <?php echo $current_content['hero_title']; ?>
+                <?php endif; ?>
+            </h1>
+            <p class="hero-subtitle" data-aos="fade-up" data-aos-delay="200">
+                <?php if ($is_logged_in): ?>
+                    <?php if ($is_admin): ?>
+                        <?php echo $current_content['admin_subtitle']; ?>
+                    <?php else: ?>
+                        <?php echo $current_content['user_subtitle']; ?>
+                    <?php endif; ?>
+                <?php else: ?>
+                    <?php echo $current_content['hero_subtitle']; ?>
+                <?php endif; ?>
+            </p>
             
             <div class="d-flex flex-wrap justify-content-center gap-3" data-aos="fade-up" data-aos-delay="400">
-                <a href="register.php" class="btn btn-primary-custom">
-                    <i class="fas fa-rocket me-2"></i>
-                    <?php echo $current_content['cta_primary']; ?>
-                </a>
-                <a href="#features" class="btn btn-secondary-custom">
-                    <i class="fas fa-play me-2"></i>
-                    <?php echo $current_content['cta_secondary']; ?>
-                </a>
+                <?php if ($is_logged_in): ?>
+                    <?php if ($is_admin): ?>
+                        <a href="admin.php" class="btn btn-primary-custom">
+                            <i class="fas fa-tachometer-alt me-2"></i>
+                            <?php echo $current_content['admin_dashboard']; ?>
+                        </a>
+                        <a href="manage_users.php" class="btn btn-secondary-custom">
+                            <i class="fas fa-users me-2"></i>
+                            <?php echo $current_content['manage_users']; ?>
+                        </a>
+                    <?php else: ?>
+                        <a href="dashboard.php" class="btn btn-primary-custom">
+                            <i class="fas fa-tachometer-alt me-2"></i>
+                            <?php echo $current_content['user_dashboard']; ?>
+                        </a>
+                        <a href="add_project.php" class="btn btn-secondary-custom">
+                            <i class="fas fa-plus me-2"></i>
+                            <?php echo $current_content['add_project']; ?>
+                        </a>
+                    <?php endif; ?>
+                <?php else: ?>
+                    <a href="register.php" class="btn btn-primary-custom">
+                        <i class="fas fa-rocket me-2"></i>
+                        <?php echo $current_content['cta_primary']; ?>
+                    </a>
+                    <a href="#features" class="btn btn-secondary-custom">
+                        <i class="fas fa-play me-2"></i>
+                        <?php echo $current_content['cta_secondary']; ?>
+                    </a>
+                <?php endif; ?>
             </div>
         </div>
     </section>
@@ -1062,7 +1273,15 @@ $current_content = $content[$lang];
 
         // Show welcome message
         setTimeout(() => {
-            showToast('<?php echo $lang === 'en' ? 'Welcome to Profolio Elite!' : 'مرحباً بك في إيليت المحفظة المهنية!'; ?>');
+            <?php if ($is_logged_in): ?>
+                <?php if ($is_admin): ?>
+                    showToast('<?php echo $current_content['admin_welcome']; ?>');
+                <?php else: ?>
+                    showToast('<?php echo $current_content['user_welcome']; ?>');
+                <?php endif; ?>
+            <?php else: ?>
+                showToast('<?php echo $lang === 'en' ? 'Welcome to Profolio Elite!' : 'مرحباً بك في إيليت المحفظة المهنية!'; ?>');
+            <?php endif; ?>
         }, 1000);
 
         // Smooth scrolling for anchor links

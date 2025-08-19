@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Authenticate user if no errors
     if (empty($errors)) {
-        $stmt = $conn->prepare("SELECT id, username, email, password FROM users WHERE email = ?");
+        $stmt = $conn->prepare("SELECT id, username, email, password, full_name, role FROM users WHERE email = ?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -81,10 +81,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if (password_verify($password, $user['password'])) {
                 $_SESSION['user_id'] = $user['id'];
-                $_SESSION['user_name'] = $user['name'];
+                $_SESSION['user_name'] = $user['full_name'];
                 $_SESSION['user_email'] = $user['email'];
+                $_SESSION['role'] = $user['role'];
                 
-                header('Location: dashboard.php');
+                // Redirect based on role
+                if ($user['role'] === 'admin') {
+                    header('Location: admin.php');
+                } else {
+                    header('Location: dashboard.php');
+                }
                 exit();
             } else {
                 $errors[] = $lang === 'en' ? 'Invalid email or password' : 'البريد الإلكتروني أو كلمة المرور غير صحيحة';

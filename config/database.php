@@ -47,6 +47,6 @@ function is_logged_in() {
 
 // Function to check if user is admin
 function is_admin() {
-    return isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin';
+    return isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
 }
 ?> 

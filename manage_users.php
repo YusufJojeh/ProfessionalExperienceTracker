@@ -249,45 +249,7 @@ $users_result = mysqli_query($conn, $users_query);
     </style>
 </head>
 <body class="<?php echo $lang === 'ar' ? 'rtl' : ''; ?>">
-<nav class="navbar navbar-expand-lg">
-    <div class="container">
-        <a class="navbar-brand" href="index.php">
-            <i class="fas fa-rocket me-2"></i>
-            <?php echo $lang === 'en' ? PLATFORM_NAME : PLATFORM_NAME_AR; ?>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="admin.php">
-                        <i class="fas fa-tachometer-alt me-1"></i>
-                        <?php echo $lang === 'en' ? 'Admin Dashboard' : 'لوحة تحكم المدير'; ?>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link active" href="manage_users.php">
-                        <i class="fas fa-users me-1"></i>
-                        <?php echo $current_content['title']; ?>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="dashboard.php">
-                        <i class="fas fa-user me-1"></i>
-                        <?php echo $lang === 'en' ? 'User Dashboard' : 'لوحة تحكم المستخدم'; ?>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="logout.php">
-                        <i class="fas fa-sign-out-alt me-1"></i>
-                        <?php echo $lang === 'en' ? 'Logout' : 'تسجيل الخروج'; ?>
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
+<?php include 'admin_nav.php'; ?>
 <section class="admin-header">
     <div class="container">
         <div class="admin-header-content">
@@ -341,7 +303,7 @@ $users_result = mysqli_query($conn, $users_query);
                         <td><?php echo date('Y-m-d', strtotime($user['created_at'])); ?></td>
                         <td>
                             <a href="profile.php?user=<?php echo $user['id']; ?>" class="btn btn-outline btn-sm">
-                                <i class="fas fa-eye"></i> <?php echo $current_content['edit']; ?>
+                                <i class="fas fa-eye"></i> <?php echo $lang === 'en' ? 'View' : 'عرض'; ?>
                             </a>
                             <?php if ($user['id'] != $_SESSION['user_id']): ?>
                             <form method="POST" style="display:inline-block">

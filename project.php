@@ -51,6 +51,23 @@ $content = [
         'comment_added' => 'Comment added successfully!',
         'comment_error' => 'Failed to add comment. Please try again.',
         'back_to_portfolio' => 'Back to Portfolio',
+        'status' => 'Status',
+        'technologies' => 'Technologies & Tools',
+        'client' => 'Client',
+        'project_link' => 'Live Demo',
+        'github_link' => 'GitHub Repository',
+        'start_date' => 'Start Date',
+        'end_date' => 'End Date',
+        'budget' => 'Budget',
+        'project_info' => 'Project Information',
+        'links' => 'Project Links',
+        'timeline' => 'Project Timeline',
+        'completed' => 'Completed',
+        'ongoing' => 'Ongoing',
+        'planned' => 'Planned',
+        'views' => 'Views',
+        'created' => 'Created',
+        'updated' => 'Updated',
     ],
     'ar' => [
         'title' => 'تفاصيل المشروع',
@@ -66,6 +83,23 @@ $content = [
         'comment_added' => 'تم إضافة التعليق بنجاح!',
         'comment_error' => 'فشل في إضافة التعليق. حاول مرة أخرى.',
         'back_to_portfolio' => 'العودة للمحفظة',
+        'status' => 'الحالة',
+        'technologies' => 'التقنيات والأدوات',
+        'client' => 'العميل',
+        'project_link' => 'العرض المباشر',
+        'github_link' => 'مستودع GitHub',
+        'start_date' => 'تاريخ البدء',
+        'end_date' => 'تاريخ الانتهاء',
+        'budget' => 'الميزانية',
+        'project_info' => 'معلومات المشروع',
+        'links' => 'روابط المشروع',
+        'timeline' => 'الجدول الزمني للمشروع',
+        'completed' => 'مكتمل',
+        'ongoing' => 'قيد التنفيذ',
+        'planned' => 'مخطط',
+        'views' => 'المشاهدات',
+        'created' => 'تاريخ الإنشاء',
+        'updated' => 'تاريخ التحديث',
     ]
 ];
 $current_content = $content[$lang];
@@ -268,6 +302,108 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
             font-size: 1.1rem;
             margin-bottom: 1.5rem;
         }
+        .project-details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        .project-info-card {
+            background: var(--gray-50);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid var(--gray-200);
+        }
+        .project-info-card h5 {
+            color: var(--primary);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+        .info-value {
+            color: var(--gray-800);
+            font-weight: 500;
+        }
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-completed {
+            background: var(--accent);
+            color: white;
+        }
+        .status-ongoing {
+            background: var(--secondary);
+            color: white;
+        }
+        .status-planned {
+            background: var(--primary);
+            color: white;
+        }
+        .technologies-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .tech-tag {
+            background: var(--primary);
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 1rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .project-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .project-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--gradient-primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-md);
+        }
+        .project-link:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            color: white;
+        }
+        .project-link.github {
+            background: var(--gradient-dark);
+        }
+        .project-link.demo {
+            background: var(--gradient-accent);
+        }
         .project-files {
             margin-bottom: 1.5rem;
         }
@@ -411,6 +547,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
             .add-comment-form {
                 padding: 1rem 0.5rem;
             }
+            .project-details-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            .project-info-card {
+                padding: 1rem;
+            }
+            .project-links {
+                flex-direction: column;
+            }
+            .project-link {
+                justify-content: center;
+            }
+            .technologies-list {
+                gap: 0.3rem;
+            }
+            .tech-tag {
+                font-size: 0.8rem;
+                padding: 0.3rem 0.6rem;
+            }
         }
     </style>
 </head>
@@ -471,10 +627,121 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
         <?php if (!empty($project['image_path']) && file_exists($project['image_path'])): ?>
             <img src="<?php echo $project['image_path']; ?>" alt="Project Image" class="project-image">
         <?php endif; ?>
+        
         <div class="project-description">
             <h4><i class="fas fa-align-left me-2"></i> <?php echo $current_content['description']; ?></h4>
             <p><?php echo nl2br(htmlspecialchars($project['description'])); ?></p>
         </div>
+
+        <!-- Project Details Grid -->
+        <div class="project-details-grid">
+            <!-- Project Information -->
+            <div class="project-info-card">
+                <h5><i class="fas fa-info-circle"></i> <?php echo $current_content['project_info']; ?></h5>
+                <div class="info-item">
+                    <span class="info-label"><?php echo $current_content['status']; ?></span>
+                    <span class="status-badge status-<?php echo $project['status']; ?>">
+                        <?php 
+                        switch ($project['status']) {
+                            case 'completed':
+                                echo $current_content['completed'];
+                                break;
+                            case 'ongoing':
+                                echo $current_content['ongoing'];
+                                break;
+                            case 'planned':
+                                echo $current_content['planned'];
+                                break;
+                        }
+                        ?>
+                    </span>
+                </div>
+                <?php if (!empty($project['client'])): ?>
+                <div class="info-item">
+                    <span class="info-label"><?php echo $current_content['client']; ?></span>
+                    <span class="info-value"><?php echo htmlspecialchars($project['client']); ?></span>
+                </div>
+                <?php endif; ?>
+                <?php if (!empty($project['budget'])): ?>
+                <div class="info-item">
+                    <span class="info-label"><?php echo $current_content['budget']; ?></span>
+                    <span class="info-value">$<?php echo number_format($project['budget'], 2); ?></span>
+                </div>
+                <?php endif; ?>
+                <div class="info-item">
+                    <span class="info-label"><?php echo $current_content['views']; ?></span>
+                    <span class="info-value"><?php echo number_format($project['views']); ?></span>
+                </div>
+            </div>
+
+            <!-- Project Timeline -->
+            <div class="project-info-card">
+                <h5><i class="fas fa-calendar-alt"></i> <?php echo $current_content['timeline']; ?></h5>
+                <?php if (!empty($project['start_date'])): ?>
+                <div class="info-item">
+                    <span class="info-label"><?php echo $current_content['start_date']; ?></span>
+                    <span class="info-value"><?php echo date('M Y', strtotime($project['start_date'])); ?></span>
+                </div>
+                <?php endif; ?>
+                <?php if (!empty($project['end_date'])): ?>
+                <div class="info-item">
+                    <span class="info-label"><?php echo $current_content['end_date']; ?></span>
+                    <span class="info-value"><?php echo date('M Y', strtotime($project['end_date'])); ?></span>
+                </div>
+                <?php endif; ?>
+                <div class="info-item">
+                    <span class="info-label"><?php echo $current_content['created']; ?></span>
+                    <span class="info-value"><?php echo date('M Y', strtotime($project['created_at'])); ?></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label"><?php echo $current_content['updated']; ?></span>
+                    <span class="info-value"><?php echo date('M Y', strtotime($project['updated_at'])); ?></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technologies & Tools -->
+        <?php if (!empty($project['technologies'])): ?>
+        <div class="project-info-card">
+            <h5><i class="fas fa-tools"></i> <?php echo $current_content['technologies']; ?></h5>
+            <div class="technologies-list">
+                <?php 
+                $technologies = explode(',', $project['technologies']);
+                foreach ($technologies as $tech): 
+                    $tech = trim($tech);
+                    if (!empty($tech)):
+                ?>
+                    <span class="tech-tag"><?php echo htmlspecialchars($tech); ?></span>
+                <?php 
+                    endif;
+                endforeach; 
+                ?>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <!-- Project Links -->
+        <?php if (!empty($project['project_link']) || !empty($project['github_link'])): ?>
+        <div class="project-info-card">
+            <h5><i class="fas fa-link"></i> <?php echo $current_content['links']; ?></h5>
+            <div class="project-links">
+                <?php if (!empty($project['project_link'])): ?>
+                <a href="<?php echo htmlspecialchars($project['project_link']); ?>" class="project-link demo" target="_blank">
+                    <i class="fas fa-external-link-alt"></i>
+                    <?php echo $current_content['project_link']; ?>
+                </a>
+                <?php endif; ?>
+                <?php if (!empty($project['github_link'])): ?>
+                <a href="<?php echo htmlspecialchars($project['github_link']); ?>" class="project-link github" target="_blank">
+                    <i class="fab fa-github"></i>
+                    <?php echo $current_content['github_link']; ?>
+                </a>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <!-- Project Files -->
         <?php if (mysqli_num_rows($files_result) > 0): ?>
         <div class="project-files">
             <h5><i class="fas fa-paperclip me-2"></i> <?php echo $current_content['files']; ?></h5>

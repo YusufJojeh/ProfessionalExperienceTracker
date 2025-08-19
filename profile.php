@@ -78,14 +78,30 @@ $current_content = $content[$lang];
 $errors = [];
 $success = false;
 
-// Get user data
-$user_id = $_SESSION['user_id'];
-$user_query = "SELECT * FROM users WHERE id = $user_id";
+// Get user data - check if viewing own profile or another user's profile
+$viewing_user_id = isset($_GET['user']) ? (int)$_GET['user'] : $_SESSION['user_id'];
+
+// If viewing another user's profile, check if current user is admin
+if ($viewing_user_id != $_SESSION['user_id']) {
+    if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+        header('Location: dashboard.php');
+        exit();
+    }
+}
+
+$user_query = "SELECT * FROM users WHERE id = $viewing_user_id";
 $user_result = mysqli_query($conn, $user_query);
+if (mysqli_num_rows($user_result) === 0) {
+    header('Location: dashboard.php');
+    exit();
+}
 $user = mysqli_fetch_assoc($user_result);
 
+// Check if current user can edit this profile
+$can_edit = ($viewing_user_id == $_SESSION['user_id']) || (isset($_SESSION['role']) && $_SESSION['role'] === 'admin');
+
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $can_edit) {
     if (isset($_POST['update_profile'])) {
         $full_name = trim($_POST['full_name']);
         $username = trim($_POST['username']);
@@ -605,43 +621,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                         <div class="profile-username text-center mb-4" style="color: var(--primary);">
                             @<?php echo htmlspecialchars($user['username']); ?>
+                            <?php if ($viewing_user_id != $_SESSION['user_id']): ?>
+                                <span class="badge bg-info ms-2"><?php echo $lang === 'en' ? 'Viewing User Profile' : 'عرض ملف المستخدم'; ?></span>
+                            <?php endif; ?>
                         </div>
+                        <?php if ($can_edit): ?>
                         <form method="POST" class="profile-form">
+                        <?php else: ?>
+                        <div class="profile-form">
+                        <?php endif; ?>
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label class="form-label"><?php echo $current_content['full_name']; ?> *</label>
-                                        <input type="text" class="form-control" name="full_name" value="<?php echo htmlspecialchars($user['full_name']); ?>" required>
+                                        <input type="text" class="form-control" name="full_name" value="<?php echo htmlspecialchars($user['full_name']); ?>" <?php echo $can_edit ? 'required' : 'readonly'; ?>>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label class="form-label"><?php echo $current_content['username']; ?> *</label>
-                                        <input type="text" class="form-control" name="username" value="<?php echo htmlspecialchars($user['username']); ?>" required>
+                                        <input type="text" class="form-control" name="username" value="<?php echo htmlspecialchars($user['username']); ?>" <?php echo $can_edit ? 'required' : 'readonly'; ?>>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label class="form-label"><?php echo $current_content['email']; ?> *</label>
-                                        <input type="email" class="form-control" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" required>
+                                        <input type="email" class="form-control" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" <?php echo $can_edit ? 'required' : 'readonly'; ?>>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label class="form-label"><?php echo $current_content['location']; ?></label>
-                                        <input type="text" class="form-control" name="location" value="<?php echo htmlspecialchars($user['location'] ?? ''); ?>">
+                                        <input type="text" class="form-control" name="location" value="<?php echo htmlspecialchars($user['location'] ?? ''); ?>" <?php echo $can_edit ? '' : 'readonly'; ?>>
                                     </div>
                                 </div>
                                 <div class="col-md-12">
                                     <div class="form-group">
                                         <label class="form-label"><?php echo $current_content['bio']; ?></label>
-                                        <textarea class="form-control" name="bio" placeholder="<?php echo $current_content['bio_placeholder']; ?>"><?php echo htmlspecialchars($user['bio']); ?></textarea>
+                                        <textarea class="form-control" name="bio" placeholder="<?php echo $current_content['bio_placeholder']; ?>" <?php echo $can_edit ? '' : 'readonly'; ?>><?php echo htmlspecialchars($user['bio']); ?></textarea>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label class="form-label"><?php echo $current_content['website']; ?></label>
-                                        <input type="url" class="form-control" name="website" value="<?php echo htmlspecialchars($user['website'] ?? ''); ?>">
+                                        <input type="url" class="form-control" name="website" value="<?php echo htmlspecialchars($user['website'] ?? ''); ?>" <?php echo $can_edit ? '' : 'readonly'; ?>>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -649,16 +672,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <label class="form-label"><?php echo $current_content['social_links']; ?></label>
                                         <div class="row g-2">
                                             <div class="col-6 col-md-3">
-                                                <input type="text" class="form-control mb-2" name="github" placeholder="GitHub" value="<?php echo htmlspecialchars($user['github'] ?? ''); ?>">
+                                                <input type="text" class="form-control mb-2" name="github" placeholder="GitHub" value="<?php echo htmlspecialchars($user['github'] ?? ''); ?>" <?php echo $can_edit ? '' : 'readonly'; ?>>
                                             </div>
                                             <div class="col-6 col-md-3">
-                                                <input type="text" class="form-control mb-2" name="linkedin" placeholder="LinkedIn" value="<?php echo htmlspecialchars($user['linkedin'] ?? ''); ?>">
+                                                <input type="text" class="form-control mb-2" name="linkedin" placeholder="LinkedIn" value="<?php echo htmlspecialchars($user['linkedin'] ?? ''); ?>" <?php echo $can_edit ? '' : 'readonly'; ?>>
                                             </div>
                                             <div class="col-6 col-md-3">
-                                                <input type="text" class="form-control mb-2" name="twitter" placeholder="Twitter" value="<?php echo htmlspecialchars($user['twitter'] ?? ''); ?>">
+                                                <input type="text" class="form-control mb-2" name="twitter" placeholder="Twitter" value="<?php echo htmlspecialchars($user['twitter'] ?? ''); ?>" <?php echo $can_edit ? '' : 'readonly'; ?>>
                                             </div>
                                             <div class="col-6 col-md-3">
-                                                <input type="text" class="form-control mb-2" name="instagram" placeholder="Instagram" value="<?php echo htmlspecialchars($user['instagram'] ?? ''); ?>">
+                                                <input type="text" class="form-control mb-2" name="instagram" placeholder="Instagram" value="<?php echo htmlspecialchars($user['instagram'] ?? ''); ?>" <?php echo $can_edit ? '' : 'readonly'; ?>>
                                             </div>
                                         </div>
                                     </div>
@@ -666,25 +689,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label class="form-label"><?php echo $lang === 'en' ? 'Portfolio Template' : 'قالب المحفظة'; ?></label>
+                                        <?php if ($can_edit): ?>
                                         <select class="form-control" name="template">
                                             <option value="default" <?php if (($user['template'] ?? 'default') === 'default') echo 'selected'; ?>><?php echo $lang === 'en' ? 'Default' : 'الافتراضي'; ?></option>
                                             <option value="modern" <?php if (($user['template'] ?? 'default') === 'modern') echo 'selected'; ?>><?php echo $lang === 'en' ? 'Modern' : 'عصري'; ?></option>
                                             <option value="classic" <?php if (($user['template'] ?? 'default') === 'classic') echo 'selected'; ?>><?php echo $lang === 'en' ? 'Classic' : 'كلاسيكي'; ?></option>
                                         </select>
+                                        <?php else: ?>
+                                        <input type="text" class="form-control" value="<?php echo ucfirst($user['template'] ?? 'default'); ?>" readonly>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
                             <div class="btn-group mt-4">
-                                <a href="dashboard.php" class="btn btn-outline">
-                                    <i class="fas fa-arrow-left"></i>
-                                    <?php echo $current_content['back_to_dashboard']; ?>
-                                </a>
+                                <?php if ($viewing_user_id != $_SESSION['user_id']): ?>
+                                    <a href="manage_users.php" class="btn btn-outline">
+                                        <i class="fas fa-arrow-left"></i>
+                                        <?php echo $lang === 'en' ? 'Back to Users' : 'العودة للمستخدمين'; ?>
+                                    </a>
+                                <?php else: ?>
+                                    <a href="dashboard.php" class="btn btn-outline">
+                                        <i class="fas fa-arrow-left"></i>
+                                        <?php echo $current_content['back_to_dashboard']; ?>
+                                    </a>
+                                <?php endif; ?>
+                                <?php if ($can_edit): ?>
                                 <button type="submit" name="update_profile" class="btn btn-primary">
                                     <i class="fas fa-save"></i>
                                     <?php echo $current_content['save_changes']; ?>
                                 </button>
+                                <?php endif; ?>
                             </div>
+                        <?php if ($can_edit): ?>
                         </form>
+                        <?php else: ?>
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
